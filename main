@@ -1,0 +1,75 @@
+struct subvector {
+    int *mas;
+    unsigned int top;
+    unsigned int capacity;
+};
+
+bool init(subvector *qv){ // инициализация пустого недовектора (top и capacity по нулям, а mas это NULL)
+    qv->mas = nullptr;
+    qv->top = 0;
+    qv->capacity = 0;
+    return true;
+}
+bool push_back(subvector *qv, int d){ // добавление элемента в конец недовектора с выделением дополнительной памяти при необходимости
+    if (qv->top == qv->capacity){
+        unsigned int ncap = (qv->capacity == 0) ? 1 : qv->capacity * 2;
+        if (!resize(qv, ncap)){
+            return false;
+        }
+    }
+    qv->mas[qv->top] = d;
+    qv->top = qv->top + 1;
+    return true;
+}
+int pop_back(subvector *qv){ // удаление элемента с конца недовектора, значение удаленного элемента вернуть (если недовектор пустой, вернуть ноль)
+    if (qv->top == 0){
+        return 0;
+    }
+    qv->top = qv->top - 1;
+    return qv->mas[qv->top];
+}
+bool resize(subvector *qv, unsigned int new_capacity){ // увеличить емкость недовектора (можно использовать и для уменьшения - тогда, в рамках данной реализации, если top меньше новой capacity, то копируем только то, что влезает, и уменьшаем top до capacity)
+    if (new_capacity == 0) {
+        delete[] qv->mas;
+        qv->mas = nullptr;
+        qv->capacity = 0;
+        qv->top = 0;
+        return true;
+    }
+    int* nmas = new int[new_capacity];
+    if (nmas == nullptr){
+        return false;
+    }
+    unsigned int copy;
+    if (qv->top < new_capacity){
+        copy = qv->top;
+    }
+    else{
+        copy = new_capacity;
+    }
+    for (unsigned int i = 0; i < copy; i++){
+        nmas[i] = qv->mas[i];
+    }
+    delete[] qv->mas;
+    qv->mas = nmas;
+    qv->capacity = new_capacity;
+    qv->top = copy;
+    return true;
+}
+void shrink_to_fit(subvector *qv){ // очистить неиспользуемую память, переехав на новое место с уменьшением capacity до top
+    if (qv->top == 0){
+        delete[] qv->mas;
+        qv->mas = nullptr;
+        qv->capacity = 0;
+    }
+    else if (qv->top < qv->capacity){
+        resize(qv, qv->top);
+    }
+}
+void clear(subvector *qv){ // очистить содержимое недовектора, занимаемое место при этом не меняется
+    qv->top = 0;
+}
+void destructor(subvector *qv){ // очистить всю используемую память, инициализировать недовектор как пустой
+    delete[] qv->mas;
+    init(qv);
+}
